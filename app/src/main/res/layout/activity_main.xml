@@ -9,19 +9,28 @@
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:orientation="vertical">
+        android:orientation="vertical"
+        >
 
         <FrameLayout
             android:id="@+id/camera_preview"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:layout_weight="1" />
-
-        <FrameLayout
+            android:layout_weight="1"
+            />
+        <HorizontalScrollView
             android:id="@+id/camera_preview_second"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:layout_weight="1" />
+            android:layout_weight="1"
+            >
+            <LinearLayout
+                android:id="@+id/stream_list"
+                android:layout_width="match_parent"
+                android:layout_height="200dp"
+                android:orientation="horizontal" />
+        </HorizontalScrollView>
+
 
         <LinearLayout
             android:layout_width="wrap_content"
@@ -41,6 +50,13 @@
                 android:layout_gravity="center"
                 android:onClick="changeCamera"
                 android:text="카메라 변경" />
+            <Button
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:text="화면 추가"
+                android:onClick="addstreamView"
+                />
         </LinearLayout>
     </LinearLayout>
 </androidx.constraintlayout.widget.ConstraintLayout>

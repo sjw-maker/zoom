@@ -13,7 +13,9 @@ import android.hardware.Camera;
 import android.os.Build;
 import android.os.Bundle;
 import android.view.View;
+import android.widget.Button;
 import android.widget.FrameLayout;
+import android.widget.LinearLayout;
 import android.widget.Toast;
 
 import com.kkks.project.zoom.features.camera.CameraManager;
@@ -21,12 +23,17 @@ import com.kkks.project.zoom.features.camera.CameraPreview;
 import com.kkks.project.zoom.features.camera.CameraStreamView;
 
 import java.io.ByteArrayOutputStream;
+import java.util.ArrayList;
+import java.util.List;
 
 public class MainActivity extends AppCompatActivity {
     private static final int PERMISSION_REQUEST_CAMERA = 100001;
     private static final int PERMISSION_REQUEST_SAVE_FILE = 100002;
+
     private static CameraPreview cameraPreview;
     private static Camera camera;
+
+    private List<CameraStreamView> streamViewList = new ArrayList<>();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -63,29 +70,16 @@ public class MainActivity extends AppCompatActivity {
         cameraPreview = new CameraPreview(this, camera);
         FrameLayout preview = findViewById(R.id.camera_preview);
         preview.addView(cameraPreview);
-        this.camera = camera;
 
-        FrameLayout preview2 = findViewById(R.id.camera_preview_second);
-        final CameraStreamView streamView = new CameraStreamView(this);
+        this.addstreamView(null);
 
         camera.setPreviewCallback(new Camera.PreviewCallback() {
             @Override
             public void onPreviewFrame(byte[] data, Camera camera) {
-                Camera.Parameters parameters = camera.getParameters();
-                int width = parameters.getPreviewSize().width;
-                int height = parameters.getPreviewSize().height;
-
-                YuvImage yuv = new YuvImage(data, parameters.getPreviewFormat(), width, height, null);
-
-                ByteArrayOutputStream out = new ByteArrayOutputStream();
-                yuv.compressToJpeg(new Rect(0, 0, width, height), 50, out);
-
-                byte[] bytes = out.toByteArray();
-
-                streamView.drawStream(bytes);
+                MainActivity.this.updateStreamView(data, camera);
             }
         });
-        preview2.addView(streamView);
+        this.camera = camera;
     }
 
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
@@ -109,11 +103,58 @@ public class MainActivity extends AppCompatActivity {
         CameraManager manager = CameraManager.getCameraManager();
         Camera camera = manager.getNextCamera();
         cameraPreview.changeCamera(camera);
+
+        camera.setPreviewCallback(new Camera.PreviewCallback() {
+            @Override
+            public void onPreviewFrame(byte[] data, Camera camera) {
+                MainActivity.this.updateStreamView(data, camera);
+            }
+        });
+        this.camera = camera;
     }
 
     public void takePicture(View view) {
         CameraManager cameraManager = CameraManager.getCameraManager();
         cameraManager.takeAndSaveImage(this.camera);
         Toast.makeText(this, "저장 완료", Toast.LENGTH_LONG).show();
+    }
+
+    public void addstreamView(View view) {
+        final CameraStreamView streamView = new CameraStreamView(this);
+        this.streamViewList.add(streamView);
+        LinearLayout streamLayout = findViewById(R.id.stream_list);
+        final LinearLayout userView = new LinearLayout(this);
+        userView.setOrientation(LinearLayout.VERTICAL);
+        Button closeButton = new Button(this);
+        userView.addView(streamLayout);
+        userView.addView(closeButton);
+        streamLayout.addView(streamView);
+        closeButton.setText("종료");
+        closeButton.setOnClickListener(new View.OnClickListener(){
+            @Override
+            public void onClick(View v){
+                MainActivity.this.removeStreamView(userView, streamView)
+            }
+        });
+
+    }
+
+    public void updateStreamView(byte[] data, Camera camera) {
+        Camera.Parameters parameters = camera.getParameters();
+        int width = parameters.getPreviewSize().width;
+        int height = parameters.getPreviewSize().height;
+
+        YuvImage yuv = new YuvImage(data, parameters.getPreviewFormat(), width, height, null);
+
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        yuv.compressToJpeg(new Rect(0, 0, width, height), 50, out);
+
+
+        CameraManager manager = CameraManager.getCameraManager();
+
+        byte[] bytes = out.toByteArray();
+        for (CameraStreamView stream : this.streamViewList) {
+            stream.drawStream(bytes, parameters.getJpegThumbnailSize(), manager.isFrontCamera());
+        }
     }
 }
