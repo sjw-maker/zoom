@@ -20,7 +20,6 @@ public class CameraStreamView extends TextureView implements CameraStreamCallbac
     }
 
 
-
     @Override
     public void drawStream(byte[] buffer, Camera.Size size, boolean isFront) {
         Bitmap image = BitmapFactory.decodeByteArray(buffer, 0, buffer.length, this.bitmapOption);
@@ -30,24 +29,24 @@ public class CameraStreamView extends TextureView implements CameraStreamCallbac
         Bitmap drawableImage = image.copy(Bitmap.Config.ARGB_8888, true);
 
         Matrix matrix = new Matrix();
-        if(isFront) {
-            matrix.setScale(-1,1);
+        if (isFront) {
+            matrix.setScale(-1, 1);
             matrix.postRotate(-270);
         } else {
             matrix.postRotate(90);
         }
 
-        int width = (int)(size.width * 1.5);
-        int height = (int)(size.height * 1.5);
+        int width = (int) (size.width * 1.5);
+        int height = (int) (size.height * 1.5);
 
-        Bitmap rotatedImage = Bitmap.createBitmap(drawableImage,0,0,drawableImage.getWidth(),
+        Bitmap rotatedImage = Bitmap.createBitmap(drawableImage, 0, 0, drawableImage.getWidth(),
                 drawableImage.getHeight(), matrix, false);
-        Bitmap scaledImage = Bitmap.createBitmap(rotatedImage, 0, 0, drawableImage.getWidth(), drawableImage.getHeight(), matrix, false);
+        Bitmap scaledImage = Bitmap.createBitmap(rotatedImage, 0, 0, width, height, matrix, false);
         this.setLayoutParams(new LinearLayout.LayoutParams(width, height, Gravity.LEFT));
 
         Canvas canvas = this.lockCanvas();
-        if(canvas != null){
-            canvas.drawBitmap(scaledImage,0,0, null);
+        if (canvas != null) {
+            canvas.drawBitmap(scaledImage, 0, 0, null);
             this.unlockCanvasAndPost(canvas);
         }
     }

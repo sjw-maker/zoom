@@ -14,13 +14,16 @@ import android.os.Build;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.FrameLayout;
 import android.widget.LinearLayout;
+import android.widget.ListView;
 import android.widget.Toast;
 
 import com.kkks.project.zoom.features.camera.CameraManager;
 import com.kkks.project.zoom.features.camera.CameraPreview;
 import com.kkks.project.zoom.features.camera.CameraStreamView;
+import com.kkks.project.zoom.features.chat.ChatTextAdapter;
 
 import java.io.ByteArrayOutputStream;
 import java.util.ArrayList;
@@ -34,7 +37,7 @@ public class MainActivity extends AppCompatActivity {
     private static Camera camera;
 
     private List<CameraStreamView> streamViewList = new ArrayList<>();
-
+    private ChatTextAdapter chatTextAdapter;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -80,6 +83,14 @@ public class MainActivity extends AppCompatActivity {
             }
         });
         this.camera = camera;
+
+        this.chatTextAdapter = new ChatTextAdapter(this);
+        this.chatTextAdapter.addMessage("hello");
+
+        ListView chatList = new ListView(this);
+        chatList.setAdapter(this.chatTextAdapter);
+
+        preview.addView(chatList);
     }
 
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
@@ -126,14 +137,14 @@ public class MainActivity extends AppCompatActivity {
         final LinearLayout userView = new LinearLayout(this);
         userView.setOrientation(LinearLayout.VERTICAL);
         Button closeButton = new Button(this);
-        userView.addView(streamLayout);
+        userView.addView(streamView);
         userView.addView(closeButton);
-        streamLayout.addView(streamView);
+        streamLayout.addView(userView);
         closeButton.setText("종료");
         closeButton.setOnClickListener(new View.OnClickListener(){
             @Override
             public void onClick(View v){
-                MainActivity.this.removeStreamView(userView, streamView)
+                MainActivity.this.removeStreamView(userView, streamView);
             }
         });
 
@@ -157,4 +168,18 @@ public class MainActivity extends AppCompatActivity {
             stream.drawStream(bytes, parameters.getJpegThumbnailSize(), manager.isFrontCamera());
         }
     }
+
+    public void removeStreamView(LinearLayout view, CameraStreamView streamView) {
+        LinearLayout streamLayout = findViewById(R.id.stream_list);
+        streamLayout.removeViewInLayout(view);
+        this.streamViewList.remove(streamView);
+    }
+
+    public void sendMessage(View view){
+        EditText editText = findViewById(R.id.message_edit);
+        String message = editText.getText().toString();
+        this.chatTextAdapter.addMessage(message);
+        this.chatTextAdapter.notifyDataSetChanged();
+    }
+
 }
